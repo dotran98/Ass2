@@ -153,6 +153,75 @@ public class DatabaseManaging {
         System.out.println("Finished!");
     }
 
+
+    public void searchStudent(String firstName, String lastName) {
+        connect("Student.db"); //connects to Student database
+        try {
+            Statement stm = conn.createStatement();
+
+            //print out details about the student
+            queries.add("SELECT * FROM Student WHERE firstName = '"
+                    + firstName +"' AND lastName = '"+ lastName +"'" );
+
+            for (String s : queries){
+                stm.execute(s);
+            }
+        } catch (SQLException sql) {sql.printStackTrace();}
+        finally {
+            try{
+                conn.close();
+            } catch(SQLException sql){
+                sql.printStackTrace();
+            }
+        }
+        System.out.println("Finished!");
+    }
+
+    public void recordActivities(String sID, int sweekNo, String sType ) {
+        connect("Curriculum.db");
+        try {
+            Statement stm = conn.createStatement();
+
+            queries.add("INSERT INTO Session(sID, sWeekNo, sType) " +
+                    "VALUES("+sID+","+sweekNo+","+sType+")");
+
+            for (String s : queries){
+                stm.execute(s);
+            }
+        } catch (SQLException sql) {sql.printStackTrace();}
+        finally {
+            try{
+                conn.close();
+            } catch(SQLException sql){
+                sql.printStackTrace();
+            }
+        }
+        System.out.println("Finished!");
+    }
+
+    public void recordAttendance(int classNo, String studentID, String sID){
+        List<String> queries = new ArrayList<>();
+        connect("Attendance.db");
+        try {
+            Statement stm = conn.createStatement();
+
+            queries.add("INSERT INTO Class%d(studentID, sID) " +
+                    "VALUES("+studentID+","+sID+")", i);
+
+            for (String s : queries){
+                stm.execute(s);
+            }
+        } catch (SQLException sql) {sql.printStackTrace();}
+        finally {
+            try{
+                conn.close();
+            } catch(SQLException sql){
+                sql.printStackTrace();
+            }
+        }
+        System.out.println("Finished!");
+    }
+
     /**
      * @param args the command line arguments
      */
