@@ -19,7 +19,7 @@ public class Staff {
         try {
             // db parameters
             String url = String.format("jdbc:sqlite:%s", filename);
-            // create a connection to the database
+            // create a  connection to the database
             conn = DriverManager.getConnection(url);
 
             String mess = String.format("Connection to %s has been established.", filename);
