@@ -85,28 +85,33 @@ public class DatabaseManaging {
             Statement stm = conn.createStatement();
 
             // Creates a record of each available tests and topics of each test
-            queries.add("CREATE TABLE Test(testID VARCHAR(250) PRIMARY KEY," +
-                    "topicID VARCHAR(250))");
+            queries.add("CREATE TABLE Test(testID VARCHAR(250)," +
+                    "topicID VARCHAR(250)," +
+                    "CONSTRAINT key PRIMARY KEY (testID, topicID))");
             // Creates a record of each available topic and parts of each topic
             queries.add("CREATE TABLE Topic(topicID VARCHAR(250)," +
-                    "partID VARCHAR(250) PRIMARY KEY," +
-                    "FOREIGN KEY (topicID) REFERENCES Test(topicID))");
+                    "partID VARCHAR(250)," +
+                    "FOREIGN KEY (topicID) REFERENCES Test(topicID)," +
+                    "CONSTRAINT key PRIMARY KEY (partID, topicID))");
             // Creates a record of each available badges
             queries.add("CREATE TABLE BadgeList(badgeID VARCHAR(250) PRIMARY KEY," +
                     "badgeType VARCHAR(250))");
             // Creates a record of what tests need to be done to get a particular badge
             queries.add("CREATE TABLE BadgeComponent(badgeID VARCHAR(250)," +
                     "testID VARCHAR(250)," +
-                    "FOREIGN KEY (testID) REFERENCES Test(testID))");
+                    "FOREIGN KEY (testID) REFERENCES Test(testID)," +
+                    "FOREIGN KEY (badgeID) REFERENCES BadgeList(badgeID)" +
+                    "CONSTRAINT key PRIMARY KEY (testID, badgeID))");
             // Creates a record of each session
             queries.add("CREATE TABLE Session(sID VARCHAR(250) PRIMARY KEY," +
                     "sWeekNo INTEGER," +
                     "sType VARCHAR(250))");
             // Creates a record of what activities done in each session
-            queries.add("CREATE TABLE Timetable(partID VARCHAR(250) PRIMARY KEY," +
+            queries.add("CREATE TABLE Timetable(partID VARCHAR(250)," +
                     "sID VARCHAR(250)," +
                     "FOREIGN KEY (sID) REFERENCES Session(sID)" +
-                    "FOREIGN KEY (partID) REFERENCES Topic(partID))");
+                    "FOREIGN KEY (partID) REFERENCES Topic(partID)," +
+                    "CONSTRAINT key PRIMARY KEY(partID, sID))");
 
             for (String s : queries){
                 stm.execute(s);
