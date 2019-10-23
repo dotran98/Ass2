@@ -14,10 +14,6 @@ public class DatabaseManaging {
      * Connection to the database
      */
     private static Connection conn;
-    /**
-     * Statement instance
-     */
-    private Statement stm;
 
     /**
      * Creates connection to a database
@@ -99,7 +95,7 @@ public class DatabaseManaging {
         connect("Curriculum.db");
         try {
             Statement stm = conn.createStatement();
-
+          
             // Creates a record of testID and tests' name
             queries.add("CREATE TABLE Test(testID VARCHAR(250) PRIMARY KEY," +
                     "testName VARCHAR(250))");
@@ -109,6 +105,7 @@ public class DatabaseManaging {
             // Creates a record of each available badges
             queries.add("CREATE TABLE Badge(badgeID VARCHAR(250) PRIMARY KEY," +
                     "badgeName VARCHAR(250))");
+
             // Creates a record of each session
             queries.add("CREATE TABLE Session(sID VARCHAR(250) PRIMARY KEY," +
                     "sWeekNo int," +
@@ -146,7 +143,8 @@ public class DatabaseManaging {
             //each class record is stored in 1 table
             for (int i = 1; i <= classNo; i++) {
                 sql = String.format("CREATE TABLE Class%d(studentID VARCHAR(250) NOT NULL," +
-                        "sID VARCHAR(250))", i);
+                        "sID VARCHAR(250) NOT NULL," +
+                        "CONSTRAINT Class%d_Key PRIMARY KEY(sID, studentID))", i, i);
                 queries.add(sql);
             }
             for (String s : queries){
