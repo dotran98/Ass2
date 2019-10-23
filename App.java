@@ -187,7 +187,7 @@ public class App {
         } catch (SQLException sql){sql.printStackTrace();}
     }
 
-    private String toSha256(String input){
+    public static String toSha256(String input){
         String ans = "";
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -204,7 +204,7 @@ public class App {
         return ans;
     }
 
-    private String addSalt(String input){
+    public static String addSalt(String input){
         return String.format("spicy%sspace", input);
     }
 
@@ -212,27 +212,22 @@ public class App {
         Scanner scan = new Scanner(System.in);
         System.out.print("Username: ");
         String userName = scan.nextLine();
-        System.out.println();
         System.out.print("Password: ");
         String pass = toSha256(addSalt(scan.nextLine()));
-        if (userName == "root" && pass == toSha256(addSalt("root"))){
-            return true;
-        }else{
-            connect("Staff.db");
-            String query = "SELECT COUNT(*) AS result FROM Staff WHERE staffID = ? AND pass = ?";
-            try {
-                PreparedStatement stm = conn.prepareStatement(query);
-                stm.setString(1, userName);
-                stm.setString(2, pass);
 
-                ResultSet rs = stm.executeQuery();
-                int result = 0;
-                if (rs.getInt(result) == 1){
-                    return true;
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
+        connect("Staff.db");
+        String query = "SELECT COUNT(*) AS result FROM Staff WHERE staffID = ? AND pass = ?";
+        try {
+            PreparedStatement stm = conn.prepareStatement(query);
+            stm.setString(1, userName);
+            stm.setString(2, pass);
+
+            ResultSet rs = stm.executeQuery();
+            if (rs.getInt(1) == 1) {
+                return true;
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return false;
     }
@@ -287,7 +282,7 @@ public class App {
             System.out.print("Date of birth (yyyy-mm-yy): ");
             String dobString = scan.nextLine();
             try {
-                 dob = LocalDate.parse(dobString);
+                dob = LocalDate.parse(dobString);
                 check = true;
             }catch (Exception e){
                 System.err.println("Invalid input. Re-input");
@@ -430,7 +425,7 @@ public class App {
                         "2. Search for a student\n" +
                         "3. Plan/Record a session's content\n" +
                         "4. Record students' achievement\n" +
-                        "5. Record students' attendance." +
+                        "5. Record students' attendance\n" +
                         "6. Exit");
                 try {
                     choice = scan.nextInt();
@@ -457,6 +452,8 @@ public class App {
                     recordAttendanceInterface();
                     break;
                 case 6:
+                    System.out.println("Logging out");
+                    scan.nextLine();
                     break;
             }
         }
