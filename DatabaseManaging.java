@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * Structures required databases
- * @author Do Tran
+ * @author Do Tran, Nam Pham
  */
 public class DatabaseManaging {
     /**
