@@ -55,6 +55,27 @@ public class DatabaseManaging {
                     "class VARCHAR(250)," +
                     "badgeRank VARCHAR(250) DEFAULT 'Unranked')");
 
+            // Creates a record of badges achieved
+            queries.add("CREATE TABLE BadgeList(badgeID VARCHAR(250)," +
+                    "studentID VARCHAR(250)," +
+                    "FOREIGN KEY (studentID) REFERENCES Student(ID)," +
+                    "CONSTRAINT BadgeList_Key PRIMARY KEY(badgeID, studentID))");
+            // Creates a record of tests done
+            queries.add("CREATE TABLE TestDone(testID VARCHAR(250)," +
+                    "studentID VARCHAR(250)," +
+                    "FOREIGN KEY (studentID) REFERENCES Student(ID)" +
+                    "CONSTRAINT TestDone_Key PRIMARY KEY(testID, studentID))");
+            // Creates a record of topics done
+            queries.add("CREATE TABLE TopicDone(topicID VARCHAR(250)," +
+                    "studentID VARCHAR(250)," +
+                    "FOREIGN KEY (studentID) REFERENCES Student(ID)" +
+                    "CONSTRAINT TopicDone_Key PRIMARY KEY(topicID, studentID))");
+            // Creates a record of parts done
+            queries.add("CREATE TABLE PartDone(partID VARCHAR(250)," +
+                    "studentID VARCHAR(250)," +
+                    "FOREIGN KEY (studentID) REFERENCES Student(ID)" +
+                    "CONSTRAINT PartDone_Key PRIMARY KEY(partID, studentID))");
+
             for (String s : queries){
                 stm.execute(s);
             }
@@ -94,44 +115,8 @@ public class DatabaseManaging {
             // Creates a record of what activities done in each session
             queries.add("CREATE TABLE Timetable(partID VARCHAR(250)," +
                     "sID VARCHAR(250)," +
-                    "FOREIGN KEY (sID) REFERENCES Session(sID))");
-
-            for (String s : queries){
-                stm.execute(s);
-            }
-        } catch (SQLException sql) {sql.printStackTrace();}
-        finally {
-            try{
-                conn.close();
-            } catch(SQLException sql){
-                sql.printStackTrace();
-            }
-        }
-        System.out.println("Finished!");
-    }
-
-    public void createTableWorkDoneDB(){
-        List<String> queries = new ArrayList<>();
-        connect("WorkDone.db");
-        try {
-            Statement stm = conn.createStatement();
-
-            // Creates a record of badges achieved
-            queries.add("CREATE TABLE BadgeList(badgeID VARCHAR(250)," +
-                    "studentID VARCHAR(250)," +
-                    "FOREIGN KEY (studentID) REFERENCES Student(ID))");
-            // Creates a record of tests done
-            queries.add("CREATE TABLE TestDone(testID VARCHAR(250)," +
-                    "studentID VARCHAR(250)," +
-                    "FOREIGN KEY (studentID) REFERENCES Student(ID))");
-            // Creates a record of topics done
-            queries.add("CREATE TABLE TopicDone(topicID VARCHAR(250)," +
-                    "studentID VARCHAR(250)," +
-                    "FOREIGN KEY (studentID) REFERENCES Student(ID))");
-            // Creates a record of parts done
-            queries.add("CREATE TABLE PartDone(partID VARCHAR(250)," +
-                    "studentID VARCHAR(250)," +
-                    "FOREIGN KEY (studentID) REFERENCES Student(ID))");
+                    "FOREIGN KEY (sID) REFERENCES Session(sID)," +
+                    "CONSTRAINT Timetable_Key PRIMARY KEY(partID, sID))");
 
             for (String s : queries){
                 stm.execute(s);
@@ -185,6 +170,5 @@ public class DatabaseManaging {
         db.createTableInAttendanceDB(5);
         db.createTableInStudentDB();
         db.createTableInCurriculumDB();
-        db.createTableWorkDoneDB();
     }
 }
