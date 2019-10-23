@@ -14,10 +14,6 @@ public class DatabaseManaging {
      * Connection to the database
      */
     private static Connection conn;
-    /**
-     * Statement instance
-     */
-    private Statement stm;
 
     /**
      * Creates connection to a database
@@ -85,33 +81,33 @@ public class DatabaseManaging {
             Statement stm = conn.createStatement();
 
             // Creates a record of each available tests and topics of each test
-            queries.add("CREATE TABLE Test(testID VARCHAR(250)," +
-                    "topicID VARCHAR(250)," +
-                    "CONSTRAINT key PRIMARY KEY (testID, topicID))");
+            queries.add("CREATE TABLE Test(testID VARCHAR(250) NOT NULL," +
+                    "topicID VARCHAR(250) NOT NULL," +
+                    "CONSTRAINT Test_Key PRIMARY KEY (testID, topicID))");
             // Creates a record of each available topic and parts of each topic
-            queries.add("CREATE TABLE Topic(topicID VARCHAR(250)," +
-                    "partID VARCHAR(250)," +
+            queries.add("CREATE TABLE Topic(topicID VARCHAR(250) NOT NULL," +
+                    "partID VARCHAR(250) NOT NULL," +
                     "FOREIGN KEY (topicID) REFERENCES Test(topicID)," +
-                    "CONSTRAINT key PRIMARY KEY (partID, topicID))");
+                    "CONSTRAINT Topic_key PRIMARY KEY (partID, topicID))");
             // Creates a record of each available badges
             queries.add("CREATE TABLE BadgeList(badgeID VARCHAR(250) PRIMARY KEY," +
                     "badgeType VARCHAR(250))");
             // Creates a record of what tests need to be done to get a particular badge
-            queries.add("CREATE TABLE BadgeComponent(badgeID VARCHAR(250)," +
-                    "testID VARCHAR(250)," +
+            queries.add("CREATE TABLE BadgeComponent(badgeID VARCHAR(250) NOT NULL," +
+                    "testID VARCHAR(250) NOT NULL," +
                     "FOREIGN KEY (testID) REFERENCES Test(testID)," +
                     "FOREIGN KEY (badgeID) REFERENCES BadgeList(badgeID)" +
-                    "CONSTRAINT key PRIMARY KEY (testID, badgeID))");
+                    "CONSTRAINT Badge_Component_Key PRIMARY KEY (testID, badgeID))");
             // Creates a record of each session
             queries.add("CREATE TABLE Session(sID VARCHAR(250) PRIMARY KEY," +
                     "sWeekNo INTEGER," +
                     "sType VARCHAR(250))");
             // Creates a record of what activities done in each session
-            queries.add("CREATE TABLE Timetable(partID VARCHAR(250)," +
-                    "sID VARCHAR(250)," +
+            queries.add("CREATE TABLE Timetable(partID VARCHAR(250) NOT NULL," +
+                    "sID VARCHAR(250) NOT NULL," +
                     "FOREIGN KEY (sID) REFERENCES Session(sID)" +
                     "FOREIGN KEY (partID) REFERENCES Topic(partID)," +
-                    "CONSTRAINT key PRIMARY KEY(partID, sID))");
+                    "CONSTRAINT Timetable_key PRIMARY KEY(partID, sID))");
 
             for (String s : queries){
                 stm.execute(s);
@@ -141,7 +137,7 @@ public class DatabaseManaging {
             for (int i = 1; i <= classNo; i++) {
                 sql = String.format("CREATE TABLE Class%d(studentID VARCHAR(250) NOT NULL," +
                         "sID VARCHAR(250) NOT NULL," +
-                        "CONSTRAINT Key PRIMARY KEY(sID, studentID))", i);
+                        "CONSTRAINT Class%d_Key PRIMARY KEY(sID, studentID))", i, i);
                 queries.add(sql);
             }
             for (String s : queries){
