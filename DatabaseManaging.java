@@ -73,7 +73,8 @@ public class DatabaseManaging {
             // Creates a record of parts done
             queries.add("CREATE TABLE PartDone(partID VARCHAR(250)," +
                     "studentID VARCHAR(250)," +
-                    "FOREIGN KEY (studentID) REFERENCES Student(ID)" +
+                    "date DATE," +
+                    "FOREIGN KEY (studentID) REFERENCES Student(ID)," +
                     "CONSTRAINT PartDone_Key PRIMARY KEY(partID, studentID))");
 
             for (String s : queries){
