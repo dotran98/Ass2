@@ -244,7 +244,7 @@ public class App {
             stm.setString(2, badgeID+"%");
 
             // get the number of tests done by the student in this above badge
-            ResultSet resultSet = stm.executeQuery(sql);
+            ResultSet resultSet = stm.executeQuery();
             if (resultSet.getInt("COUNT(testID)") >= 10) {
 
                 // get testID of tests done by the student
@@ -257,7 +257,7 @@ public class App {
                 String ID; // ID is the testID
                 int lastIndex, testNum;
                 // check whether the tests 1-7 is done
-                boolean[] checkTest = new boolean[7];
+                boolean[] checkTest = new boolean[15];
                 while (resultSet.next()){
                     ID = resultSet.getString("testID");
                     lastIndex = ID.lastIndexOf('.');
@@ -676,9 +676,11 @@ public class App {
 
     }
     public static void main(String[] args){
+
         App test = new App();
         while (true){
             test.run();
         }
+
     }
 }
