@@ -49,32 +49,32 @@ public class DatabaseManaging {
 
             //Creates a record of each student
             queries.add("CREATE TABLE Student(ID VARCHAR(250) PRIMARY KEY," +
-                    "firstName VARCHAR(250)," +
-                    "lastName VARCHAR(250)," +
-                    "DOB Date," +
-                    "class VARCHAR(250)," +
+                    "firstName VARCHAR(250) NOT NULL," +
+                    "lastName VARCHAR(250) NOT NULL," +
+                    "DOB Date NOT NULL," +
+                    "class VARCHAR(250) NOT NULL," +
                     "badgeRank VARCHAR(250) DEFAULT 'Unranked')");
 
             // Creates a record of badges achieved
-            queries.add("CREATE TABLE BadgeList(badgeID VARCHAR(250)," +
-                    "studentID VARCHAR(250)," +
+            queries.add("CREATE TABLE BadgeList(badgeID VARCHAR(250) NOT NULL," +
+                    "studentID VARCHAR(250) NOT NULL," +
                     "FOREIGN KEY (studentID) REFERENCES Student(ID)," +
                     "CONSTRAINT BadgeList_Key PRIMARY KEY(badgeID, studentID))");
             // Creates a record of tests done
-            queries.add("CREATE TABLE TestDone(testID VARCHAR(250)," +
-                    "studentID VARCHAR(250)," +
+            queries.add("CREATE TABLE TestDone(testID VARCHAR(250) NOT NULL," +
+                    "studentID VARCHAR(250) NOT NULL," +
                     "FOREIGN KEY (studentID) REFERENCES Student(ID)" +
                     "CONSTRAINT TestDone_Key PRIMARY KEY(testID, studentID))");
             // Creates a record of topics done
-            queries.add("CREATE TABLE TopicDone(topicID VARCHAR(250)," +
-                    "studentID VARCHAR(250)," +
-                    "date DATE," +
+            queries.add("CREATE TABLE TopicDone(topicID VARCHAR(250) NOT NULL," +
+                    "studentID VARCHAR(250) NOT NULL," +
+                    "date DATE NOT NULL," +
                     "FOREIGN KEY (studentID) REFERENCES Student(ID)" +
                     "CONSTRAINT TopicDone_Key PRIMARY KEY(topicID, studentID))");
             // Creates a record of parts done
-            queries.add("CREATE TABLE PartDone(partID VARCHAR(250)," +
-                    "studentID VARCHAR(250)," +
-                    "date DATE," +
+            queries.add("CREATE TABLE PartDone(partID VARCHAR(250) NOT NULL," +
+                    "studentID VARCHAR(250) NOT NULL," +
+                    "date DATE NOT NULL," +
                     "FOREIGN KEY (studentID) REFERENCES Student(ID)," +
                     "CONSTRAINT PartDone_Key PRIMARY KEY(partID, studentID))");
 
@@ -103,20 +103,20 @@ public class DatabaseManaging {
 
             // Creates a record of testID and tests' name
             queries.add("CREATE TABLE Test(testID VARCHAR(250) PRIMARY KEY," +
-                    "testName VARCHAR(250))");
+                    "testName VARCHAR(250) NOT NULL)");
             // Creates a record of topicID and topics' name
             queries.add("CREATE TABLE Topic(topicID VARCHAR(250) PRIMARY KEY," +
-                    "topicName VARCHAR(250))");
+                    "topicName VARCHAR(250) NOT NULL)");
             // Creates a record of each available badges
             queries.add("CREATE TABLE Badge(badgeID VARCHAR(250) PRIMARY KEY," +
-                    "badgeName VARCHAR(250))");
+                    "badgeName VARCHAR(250) NOT NULL)");
             // Creates a record of each session
-            queries.add("CREATE TABLE Session(sID VARCHAR(250) PRIMARY KEY," +
-                    "sWeekNo int," +
-                    "sType VARCHAR(250))");
+            queries.add("CREATE TABLE Session(sID VARCHAR(250) PRIMARY KEY NOT NULL," +
+                    "sWeekNo int NOT NULL," +
+                    "sType VARCHAR(250) NOT NULL)");
             // Creates a record of what activities done in each session
-            queries.add("CREATE TABLE Timetable(partID VARCHAR(250)," +
-                    "sID VARCHAR(250)," +
+            queries.add("CREATE TABLE Timetable(partID VARCHAR(250) NOT NULL," +
+                    "sID VARCHAR(250) NOT NULL," +
                     "FOREIGN KEY (sID) REFERENCES Session(sID)," +
                     "CONSTRAINT Timetable_Key PRIMARY KEY(partID, sID))");
 
@@ -147,7 +147,8 @@ public class DatabaseManaging {
             //each class record is stored in 1 table
             for (int i = 1; i <= classNo; i++) {
                 sql = String.format("CREATE TABLE Class%d(studentID VARCHAR(250) NOT NULL," +
-                        "sID VARCHAR(250))", i);
+                        "sID VARCHAR(250) NOT NULL," +
+                        "CONSTRAINT Class%d_Key PRIMARY KEY(sID, studentID))", i, i);
                 queries.add(sql);
             }
             for (String s : queries){
@@ -160,6 +161,26 @@ public class DatabaseManaging {
             } catch(SQLException sql){
                 sql.printStackTrace();
             }
+        }
+        System.out.println("Finished!");
+    }
+
+    public void createTableINStaffDB(){
+        connect("Staff.db");
+        String sql = "CREATE TABLE Staff(staffID VARCHAR(250) PRIMARY KEY," +
+                "pass VARCHAR(250) NOT NULL)";
+        try {
+            Statement stm = conn.createStatement();
+            stm.execute(sql);
+
+            //create initial value for Staff table
+            String defaultID = "root";
+            String defaultPass = App.toSha256(App.addSalt("root"));
+            sql = String.format("INSERT INTO Staff(staffID, pass) VALUES ('%s', '%s')",
+                    defaultID, defaultPass);
+            stm.execute(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         System.out.println("Finished!");
     }
