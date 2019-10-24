@@ -171,16 +171,14 @@ public class App {
      * update what tests has been done by each student
      * @param badgeID
      * @param studentID
-     * @param date
      */
-    private void updateBadgeList (String badgeID, String studentID, LocalDate date) {
+    private void updateBadgeList (String badgeID, String studentID) {
         connect("Student.db");
         try{
-            String sql = "INSERT INTO BadgeList(badgeID, studentID, date) VALUES(?,?,?)";
+            String sql = "INSERT INTO BadgeList(badgeID, studentID) VALUES(?,?)";
             PreparedStatement stm = conn.prepareStatement(sql);
             stm.setString(1, badgeID);
             stm.setString(2, studentID);
-            stm.setString(3, date.toString());
 
             stm.execute();
 
@@ -191,16 +189,14 @@ public class App {
      * update what tests has been done by each student
      * @param testID
      * @param studentID
-     * @param date
      */
-    private void updateTestDone (String testID, String studentID, LocalDate date) {
+    private void updateTestDone (String testID, String studentID) {
         connect("Student.db");
         try{
-            String sql = "INSERT INTO TestDone(testID, studentID, date) VALUES(?,?,?)";
+            String sql = "INSERT INTO TestDone(testID, studentID) VALUES(?,?)";
             PreparedStatement stm = conn.prepareStatement(sql);
             stm.setString(1, testID);
             stm.setString(2, studentID);
-            stm.setString(3, date.toString());
 
             stm.execute();
 
@@ -215,7 +211,7 @@ public class App {
 
             // get the number of tests done by the student in this above badge
             ResultSet resultSet = stm.executeQuery(sql);
-            if (resultSet.getInt("COUNT(testID)") == 10) updateBadgeList(badgeID, studentID, date);
+            if (resultSet.getInt("COUNT(testID)") == 10) updateBadgeList(badgeID, studentID);
         } catch (SQLException sql){sql.printStackTrace();}
     }
 
@@ -247,7 +243,7 @@ public class App {
 
             // get the number of topics done by the student in this above topic
             ResultSet resultSet = stm.executeQuery(sql);
-            if (resultSet.getInt("COUNT(topicID)") == 3) updateTestDone(testID, studentID, date);
+            if (resultSet.getInt("COUNT(topicID)") == 3) updateTestDone(testID, studentID);
         } catch (SQLException sql){sql.printStackTrace();}
     }
 

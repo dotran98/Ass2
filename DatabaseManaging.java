@@ -58,13 +58,11 @@ public class DatabaseManaging {
             // Creates a record of badges achieved
             queries.add("CREATE TABLE BadgeList(badgeID VARCHAR(250)," +
                     "studentID VARCHAR(250)," +
-                    "date DATE" +
                     "FOREIGN KEY (studentID) REFERENCES Student(ID)," +
                     "CONSTRAINT BadgeList_Key PRIMARY KEY(badgeID, studentID))");
             // Creates a record of tests done
             queries.add("CREATE TABLE TestDone(testID VARCHAR(250)," +
                     "studentID VARCHAR(250)," +
-                    "date DATE" +
                     "FOREIGN KEY (studentID) REFERENCES Student(ID)" +
                     "CONSTRAINT TestDone_Key PRIMARY KEY(testID, studentID))");
             // Creates a record of topics done
