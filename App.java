@@ -4,7 +4,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Scanner;
 
@@ -15,6 +14,7 @@ import java.util.Scanner;
  * @author Do Tran
  */
 public class App {
+
     private static Connection conn;
 
     /**
@@ -27,10 +27,6 @@ public class App {
             String url = String.format("jdbc:sqlite:%s", filename);
             // create a connection to the database
             conn = DriverManager.getConnection(url);
-
-            String mess = String.format("Connection to %s has been established.", filename);
-            System.out.println(mess);
-
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -43,7 +39,7 @@ public class App {
      * @param lastName
      * @param age
      */
-    private void searchStudent(String firstName, String lastName, int age) {
+    private void searchStudent(String firstName, String lastName, int age){
         String sql;
         String newFirstName = "%" + firstName + "%";
         String newLastName = "%" + lastName + "%";
@@ -51,11 +47,12 @@ public class App {
 
         //prepare sql query
         if(age <= -1) {
-            sql = "SELECT ID, firstName, lastName FROM Student WHERE firstName LIKE ? AND lastName LIKE ?";
+            sql = "SELECT ID, firstName, lastName, DOB, class, badgeRank " +
+                    "FROM Student WHERE firstName LIKE ? AND lastName LIKE ?";
         } else{
             Calendar today = Calendar.getInstance();
             int year = today.get(Calendar.YEAR) - age;
-            sql = String.format("SELECT ID, firstName, lastName FROM Student " +
+            sql = String.format("SELECT ID, firstName, lastName, DOB, class, badgeRank FROM Student " +
                     "WHERE firstName LIKE ? AND lastName LIKE ? AND dob LIKE '%d'", year);
         }
 
@@ -69,13 +66,19 @@ public class App {
 
             //print out result
             String repeatedLine = new String(new char[30]).replace('\0', '_');
-            System.out.println(String.format(" %30s %30s", repeatedLine, repeatedLine));
-            System.out.println(String.format("|%-30s|%-30s|","First Name","Last Name"));
-            System.out.println(String.format(" %30s %30s", repeatedLine, repeatedLine));
+            System.out.println(String.format(" %30s %30s %30s %30s %30s %30s",
+                    repeatedLine, repeatedLine, repeatedLine, repeatedLine, repeatedLine, repeatedLine));
+            System.out.println(String.format("|%-30s|%-30s|%-30s|%-30s|%-30s|%-30s|",
+                    "ID","First Name","Last Name","Date of Birth","Class","Badge Rank"));
+            System.out.println(String.format("|%30s|%30s|%30s|%30s|%30s|%30s|",
+                    repeatedLine, repeatedLine, repeatedLine, repeatedLine, repeatedLine, repeatedLine));
             while (rs.next()){
-                String str = String.format("|%-30s|%-30s|", rs.getString(firstName), rs.getString(lastName));
+                String str = String.format("|%-30s|%-30s|%-30s|%-30s|%-30s|%-30s|",
+                        rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4),
+                        rs.getInt(5),rs.getString(6));
                 System.out.println(str);
-                System.out.println(String.format(" %30s %30s", repeatedLine, repeatedLine));
+                System.out.println(String.format(" %30s %30s %30s %30s %30s %30s",
+                        repeatedLine, repeatedLine, repeatedLine, repeatedLine, repeatedLine, repeatedLine));
             }
         } catch (SQLException se) {se.printStackTrace();}
         finally {
@@ -94,7 +97,9 @@ public class App {
      * @param sweekNo
      * @param sType
      */
-    private void recordActivities(String sID, int sweekNo, String sType) {
+    private void recordActivities(String sID, int sweekNo, String sType) throws NullValueDetected{
+        if (sID.equals("") || sType.equals("") || sweekNo < 1) throw new NullValueDetected();
+
         connect("Curriculum.db");
         try {
             String sql = "INSERT INTO Session(sID, sWeekNo, sType) " +
@@ -113,7 +118,6 @@ public class App {
                 sql.printStackTrace();
             }
         }
-        System.out.println("Finished!");
     }
 
     /**
@@ -122,7 +126,9 @@ public class App {
      * @param studentID
      * @param sID
      */
-    private void recordAttendance(int classNo, String studentID, String sID){
+    private void recordAttendance(int classNo, String studentID, String sID) throws NullValueDetected{
+        if (studentID.equals("") || sID.equals("") || classNo < 1) throw new NullValueDetected();
+
         connect("Attendance.db");
         try {
             String sql = String.format("INSERT INTO Class%d(studentID, sID) " +
@@ -140,7 +146,6 @@ public class App {
                 sql.printStackTrace();
             }
         }
-        System.out.println("Finished!");
     }
 
     /**
@@ -152,7 +157,11 @@ public class App {
      * @param classID
      */
     private void addStudent(String ID, String firstName, String lastName,
-                            LocalDate dob, String classID){
+                            LocalDate dob, String classID) throws NullValueDetected{
+        if (ID.equals("") || firstName.equals("") || lastName.equals("") || classID.equals("")){
+            throw new NullValueDetected();
+        }
+
         connect("Student.db");
         try{
             String sql = "INSERT INTO Student(ID, firstName, lastName, dob, class) VALUES (?,?,?,?,?)";
@@ -169,11 +178,15 @@ public class App {
     }
 
     /**
-     * update what tests has been done by each student
+     * update what badges have been achieved by each student
      * @param badgeID
      * @param studentID
      */
-    private void updateBadgeList (String badgeID, String studentID) {
+    private void updateBadgeList (String badgeID, String studentID) throws NullValueDetected{
+        if (badgeID.equals("") || studentID.equals("")){
+            throw new NullValueDetected();
+        }
+
         connect("Student.db");
         try{
             String sql = "INSERT INTO BadgeList(badgeID, studentID) VALUES(?,?)";
@@ -184,6 +197,13 @@ public class App {
             stm.execute();
 
         } catch (SQLException sql){sql.printStackTrace();}
+        finally {
+            try {
+                conn.close();
+            }catch (SQLException se){
+                se.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -191,7 +211,11 @@ public class App {
      * @param testID
      * @param studentID
      */
-    private void updateTestDone (String testID, String studentID) {
+    private void updateTestDone (String testID, String studentID) throws NullValueDetected{
+        if (testID.equals("") || studentID.equals("")){
+            throw new NullValueDetected();
+        }
+
         connect("Student.db");
         try{
             String sql = "INSERT INTO TestDone(testID, studentID) VALUES(?,?)";
@@ -211,7 +235,7 @@ public class App {
             stm.setString(2, badgeID+"%");
 
             // get the number of tests done by the student in this above badge
-            ResultSet resultSet = stm.executeQuery(sql);
+            ResultSet resultSet = stm.executeQuery();
             if (resultSet.getInt("COUNT(testID)") >= 10) {
 
                 // get testID of tests done by the student
@@ -224,7 +248,7 @@ public class App {
                 String ID; // ID is the testID
                 int lastIndex, testNum;
                 // check whether the tests 1-7 is done
-                boolean[] checkTest = new boolean[7];
+                boolean[] checkTest = new boolean[15];
                 while (resultSet.next()){
                     ID = resultSet.getString("testID");
                     lastIndex = ID.lastIndexOf('.');
@@ -238,12 +262,22 @@ public class App {
                         // one of the compulsory tests is not done
                         compulsoryTestsComplete = false;
                         break;
-                }
+                    }
                 // the number of tests done is greater than 10
                 // all compulsory tests are completed
-                if (compulsoryTestsComplete) updateBadgeList(badgeID,studentID);
+                if (compulsoryTestsComplete){
+                    conn.close();
+                    updateBadgeList(badgeID,studentID);
+                }
             }
         } catch (SQLException sql){sql.printStackTrace();}
+        finally {
+            try {
+                conn.close();
+            }catch (SQLException se){
+                se.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -252,7 +286,11 @@ public class App {
      * @param studentID
      * @param date
      */
-    private void updateTopicDone (String topicID, String studentID, LocalDate date) {
+    private void updateTopicDone (String topicID, String studentID, LocalDate date) throws NullValueDetected{
+        if (topicID.equals("") || studentID.equals("")){
+            throw new NullValueDetected();
+        }
+
         connect("Student.db");
         try{
             String sql = "INSERT INTO TopicDone(topicID, studentID, date) VALUES(?,?,?)";
@@ -274,8 +312,18 @@ public class App {
 
             // get the number of topics done by the student in this above topic
             ResultSet resultSet = stm.executeQuery();
-            if (resultSet.getInt("COUNT(topicID)") == 3) updateTestDone(testID, studentID);
+            if (resultSet.getInt("COUNT(topicID)") == 3) {
+                conn.close();
+                updateTestDone(testID, studentID);
+            }
         } catch (SQLException sql){sql.printStackTrace();}
+        finally {
+            try {
+                conn.close();
+            }catch (SQLException se){
+                se.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -284,7 +332,11 @@ public class App {
      * @param studentID
      * @param date
      */
-    private void recordWorkDone(String workID, String studentID, LocalDate date){
+    private void recordWorkDone(String workID, String studentID, LocalDate date) throws NullValueDetected{
+        if (workID.equals("") || studentID.equals("")){
+            throw new NullValueDetected();
+        }
+
         connect("Student.db");
         try{
             String sql = "INSERT INTO PartDone(partID, studentID, date) VALUES (?,?,?)";
@@ -300,6 +352,7 @@ public class App {
             int lastIndexDot = workID.lastIndexOf('.');
             String  topicID = workID.substring(0,lastIndexDot);
 
+
             sql = "SELECT COUNT(partID) FROM PartDone WHERE studentID = ? AND partID LIKE ?";
             stm = conn.prepareStatement(sql);
             stm.setString(1, studentID);
@@ -307,11 +360,20 @@ public class App {
 
             // get the number of parts done by the student in this above topic
             ResultSet resultSet = stm.executeQuery();
-            if (resultSet.getInt("COUNT(partID)") == 3) updateTopicDone(topicID, studentID, date);
+            if (resultSet.getInt("COUNT(partID)") == 3) {
+                conn.close();
+                updateTopicDone(topicID, studentID, date);
+            }
         } catch (SQLException sql){sql.printStackTrace();}
+        finally {
+            try {
+                conn.close();
+            }catch (SQLException se){
+                se.printStackTrace();
+            }
+        }
 
     }
-
 
     public static String toSha256(String input){
         String ans = "";
@@ -336,10 +398,13 @@ public class App {
 
     private boolean logIn(){
         Scanner scan = new Scanner(System.in);
+
         System.out.print("Username: ");
         String userName = scan.nextLine();
         System.out.print("Password: ");
-        String pass = toSha256(addSalt(scan.nextLine()));
+        String password = scan.nextLine();
+        String pass = toSha256(addSalt(password));
+
         connect("Staff.db");
         String query = "SELECT COUNT(*) AS result FROM Staff WHERE staffID = ? AND pass = ?";
         try {
@@ -362,49 +427,46 @@ public class App {
         System.out.println("Student searching:\n(Press Enter if you don't have required information)");
         System.out.print("First name: ");
         String firstName = scan.nextLine();
-        System.out.println();
         System.out.print("Last name: ");
         String lastName = scan.nextLine();
-        System.out.println();
         boolean check = false;
         int age = -1;
         while (!check){
             System.out.print("Age: ");
             String ageTemp = scan.nextLine();
-            try {
-                age = Integer.parseInt(ageTemp);
-                check = true;
-            }catch (Exception e){
-                System.err.println("Invalid input. Re-input");
+            if (ageTemp.equals("")) check = true;
+            else {
+                try {
+                    age = Integer.parseInt(ageTemp);
+                    check = true;
+                } catch (Exception e) {
+                    System.err.println("Invalid input. Re-input");
+                }
             }
         }
-        System.out.println();
         searchStudent(firstName, lastName, age);
+        System.out.println("Finished");
     }
 
     private void addStudentInterface(){
         Scanner scan = new Scanner(System.in);
-        System.out.println("Student adding:\n");
+        System.out.println("Student adding:");
         System.out.print("ID: ");
         String id = scan.nextLine();
-        System.out.println();
 
         System.out.print("First name: ");
         String firstName = scan.nextLine();
-        System.out.println();
 
         System.out.print("Last name: ");
         String lastName = scan.nextLine();
-        System.out.println();
 
         System.out.print("Class: ");
         String classID = scan.nextLine();
-        System.out.println();
 
         boolean check = false;
         LocalDate dob = null;
         while (!check){
-            System.out.print("Date of birth (yyyy-mm-yy): ");
+            System.out.print("Date of birth (yyyy-mm-dd): ");
             String dobString = scan.nextLine();
             try {
                 dob = LocalDate.parse(dobString);
@@ -413,7 +475,6 @@ public class App {
                 System.err.println("Invalid input. Re-input");
             }
         }
-        System.out.println();
 
         System.out.print(String.format("New student:\n" +
                 "ID: %s\n" +
@@ -424,21 +485,24 @@ public class App {
 
         System.out.print("Type 'Y' to proceed (Anything else to abort): ");
         String isProceed = scan.nextLine().toUpperCase();
-        if (isProceed == "Y"){
-            addStudent(id, firstName, lastName, dob, classID);
+        if (isProceed.equals("Y")){
+            try {
+                addStudent(id, firstName, lastName, dob, classID);
+                System.out.println("Finished");
+            } catch (NullValueDetected nul){
+                System.err.println(nul.getMessage());
+            }
         }
     }
 
     private void recordActivitiesInterface(){
         Scanner scan = new Scanner(System.in);
-        System.out.println("Session content recording:\n");
+        System.out.println("Session content recording:");
         System.out.print("Session ID: ");
         String sID = scan.nextLine();
-        System.out.println();
 
         System.out.print("Session Type: ");
         String sType = scan.nextLine();
-        System.out.println();
 
         boolean check = false;
         int weekNo = -1;
@@ -452,7 +516,6 @@ public class App {
                 System.err.println("Invalid input. Re-input");
             }
         }
-        System.out.println();
         System.out.print(String.format("Session content record:\n" +
                 "Session ID: %s\n" +
                 "Week: %d\n" +
@@ -460,26 +523,29 @@ public class App {
 
         System.out.print("Type 'Y' to proceed (Anything else to abort): ");
         String isProceed = scan.nextLine().toUpperCase();
-        if (isProceed == "Y"){
-            recordActivities(sID, weekNo, sType);
+        if (isProceed.equals("Y")){
+            try {
+                recordActivities(sID, weekNo, sType);
+                System.out.println("Finished");
+            }catch (NullValueDetected nul){
+                System.err.println(nul.getMessage());
+            }
         }
     }
 
     private void recordWorkDoneInterface(){
         Scanner scan = new Scanner(System.in);
-        System.out.println("Achievement recording:\n");
+        System.out.println("Achievement recording:");
         System.out.print("Part Done: ");
         String partID = scan.nextLine();
-        System.out.println();
 
         System.out.print("Student ID: ");
         String studentID = scan.nextLine();
-        System.out.println();
 
         boolean check = false;
         LocalDate date = null;
         while (!check){
-            System.out.print("Date of completion (yyyy-mm-yy): ");
+            System.out.print("Date (yyyy-mm-dd): ");
             String dateString = scan.nextLine();
             try {
                 date = LocalDate.parse(dateString);
@@ -488,7 +554,6 @@ public class App {
                 System.err.println("Invalid input. Re-input");
             }
         }
-        System.out.println();
 
         System.out.print(String.format("Achievement record:\n" +
                 "Part Done: %s\n" +
@@ -497,21 +562,24 @@ public class App {
 
         System.out.print("Type 'Y' to proceed (Anything else to abort): ");
         String isProceed = scan.nextLine().toUpperCase();
-        if (isProceed == "Y"){
-            recordWorkDone(partID, studentID, date);
+        if (isProceed.equals("Y")){
+            try{
+                recordWorkDone(partID, studentID, date);
+                System.out.println("Finished");
+            } catch (NullValueDetected nul){
+                System.err.println(nul.getMessage());
+            }
         }
     }
 
     private void recordAttendanceInterface(){
         Scanner scan = new Scanner(System.in);
-        System.out.println("Attendance recording:\n");
+        System.out.println("Attendance recording:");
         System.out.print("Student ID: ");
         String studentID = scan.nextLine();
-        System.out.println();
 
         System.out.print("Session ID: ");
         String sID = scan.nextLine();
-        System.out.println();
 
         boolean check = false;
         int classNo = -1;
@@ -525,7 +593,6 @@ public class App {
                 System.err.println("Invalid input. Re-input");
             }
         }
-        System.out.println();
         System.out.print(String.format("Session content record:\n" +
                 "Class: %d\n" +
                 "Student ID: %s\n" +
@@ -533,17 +600,23 @@ public class App {
 
         System.out.print("Type 'Y' to proceed (Anything else to abort): ");
         String isProceed = scan.nextLine().toUpperCase();
-        if (isProceed == "Y"){
-            recordAttendance(classNo, studentID, sID);
+        if (isProceed.equals("Y")){
+            try{
+                recordAttendance(classNo, studentID, sID);
+                System.out.println("Finished");
+            } catch (NullValueDetected nul){
+                System.err.println(nul.getMessage());
+            }
         }
     }
 
     public void run(){
         int choice = -1;
         boolean checkInput = false;
+        Scanner scan = new Scanner(System.in);
         System.out.println("Welcome to Cyber Security Course Admin App ");
-        while (logIn() && choice != 6){
-            Scanner scan = new Scanner(System.in);
+        boolean isLogIn = logIn();
+        while ( isLogIn && choice != 6){
             //read user input
             while(!checkInput) {
                 System.out.println("1. Add a student\n" +
@@ -551,7 +624,8 @@ public class App {
                         "3. Plan/Record a session's content\n" +
                         "4. Record students' achievement\n" +
                         "5. Record students' attendance\n" +
-                        "6. Exit");
+                        "6. Log out\n" +
+                        "7. Shut down\n");
                 try {
                     choice = scan.nextInt();
                     scan.nextLine();
@@ -563,31 +637,41 @@ public class App {
             switch (choice){
                 case 1:
                     addStudentInterface();
+                    checkInput = false;
                     break;
                 case 2:
                     searchStudentInterface();
+                    checkInput = false;
                     break;
                 case 3:
                     recordActivitiesInterface();
+                    checkInput = false;
                     break;
                 case 4:
                     recordWorkDoneInterface();
+                    checkInput = false;
                     break;
                 case 5:
                     recordAttendanceInterface();
+                    checkInput = false;
                     break;
                 case 6:
                     System.out.println("Logging out");
                     scan.nextLine();
                     break;
+                case 7:
+                    System.out.println("Shut down");
+                    System.exit(0);
             }
         }
 
     }
     public static void main(String[] args){
+
         App test = new App();
         while (true){
             test.run();
         }
+
     }
 }
