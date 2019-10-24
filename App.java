@@ -1,3 +1,5 @@
+import javax.swing.*;
+import java.io.Console;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -175,6 +177,13 @@ public class App {
 
             stm.execute();
         } catch (SQLException sql){sql.printStackTrace();}
+        finally {
+            try{
+                conn.close();
+            } catch(SQLException se){
+                se.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -659,7 +668,7 @@ public class App {
                     System.out.println("Logging out");
                     scan.nextLine();
                     break;
-                case 7:
+                default:
                     System.out.println("Shut down");
                     System.exit(0);
             }
