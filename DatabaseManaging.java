@@ -7,17 +7,13 @@ import java.util.List;
 
 /**
  * Structures required databases
- * @author Do Tran
+ * @author Do Tran, Nam Pham
  */
 public class DatabaseManaging {
     /**
      * Connection to the database
      */
     private static Connection conn;
-    /**
-     * Statement instance
-     */
-    private Statement stm;
 
     /**
      * Creates connection to a database
@@ -110,6 +106,7 @@ public class DatabaseManaging {
             // Creates a record of each available badges
             queries.add("CREATE TABLE Badge(badgeID VARCHAR(250) PRIMARY KEY," +
                     "badgeName VARCHAR(250) NOT NULL)");
+
             // Creates a record of each session
             queries.add("CREATE TABLE Session(sID VARCHAR(250) PRIMARY KEY NOT NULL," +
                     "sWeekNo int NOT NULL," +
@@ -193,5 +190,6 @@ public class DatabaseManaging {
         db.createTableInAttendanceDB(5);
         db.createTableInStudentDB();
         db.createTableInCurriculumDB();
+        db.createTableINStaffDB();
     }
 }
