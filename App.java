@@ -4,6 +4,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Scanner;
 
@@ -211,7 +212,37 @@ public class App {
 
             // get the number of tests done by the student in this above badge
             ResultSet resultSet = stm.executeQuery(sql);
-            if (resultSet.getInt("COUNT(testID)") == 10) updateBadgeList(badgeID, studentID);
+            if (resultSet.getInt("COUNT(testID)") >= 10) {
+
+                // get testID of tests done by the student
+                sql = "SELECT testID FROM TestDone WHERE studentID = ? AND testID LIKE ?";
+                stm = conn.prepareStatement(sql);
+                stm.setString(1, studentID);
+                stm.setString(2, badgeID+"%");
+                resultSet = stm.executeQuery();
+
+                String ID; // ID is the testID
+                int lastIndex, testNum;
+                // check whether the tests 1-7 is done
+                boolean[] checkTest = new boolean[7];
+                while (resultSet.next()){
+                    ID = resultSet.getString("testID");
+                    lastIndex = ID.lastIndexOf('.');
+                    // get the test's number
+                    testNum = Integer.parseInt(ID.substring(lastIndex+1));
+                    checkTest[testNum] = true;
+                }
+                boolean compulsoryTestsComplete = true;
+                for (int i=1;i<=7;i++)
+                    if (!checkTest[i]) {
+                        // one of the compulsory tests is not done
+                        compulsoryTestsComplete = false;
+                        break;
+                }
+                // the number of tests done is greater than 10
+                // all compulsory tests are completed
+                if (compulsoryTestsComplete) updateBadgeList(badgeID,studentID);
+            }
         } catch (SQLException sql){sql.printStackTrace();}
     }
 
@@ -242,7 +273,7 @@ public class App {
             stm.setString(2, testID+"%");
 
             // get the number of topics done by the student in this above topic
-            ResultSet resultSet = stm.executeQuery(sql);
+            ResultSet resultSet = stm.executeQuery();
             if (resultSet.getInt("COUNT(topicID)") == 3) updateTestDone(testID, studentID);
         } catch (SQLException sql){sql.printStackTrace();}
     }
@@ -275,7 +306,7 @@ public class App {
             stm.setString(2, topicID+"%");
 
             // get the number of parts done by the student in this above topic
-            ResultSet resultSet = stm.executeQuery(sql);
+            ResultSet resultSet = stm.executeQuery();
             if (resultSet.getInt("COUNT(partID)") == 3) updateTopicDone(topicID, studentID, date);
         } catch (SQLException sql){sql.printStackTrace();}
 
