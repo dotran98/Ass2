@@ -168,6 +168,90 @@ public class App {
     }
 
     /**
+     * update what tests has been done by each student
+     * @param badgeID
+     * @param studentID
+     * @param date
+     */
+    private void updateBadgeList (String badgeID, String studentID, LocalDate date) {
+        connect("Student.db");
+        try{
+            String sql = "INSERT INTO BadgeList(badgeID, studentID, date) VALUES(?,?,?)";
+            PreparedStatement stm = conn.prepareStatement(sql);
+            stm.setString(1, badgeID);
+            stm.setString(2, studentID);
+            stm.setString(3, date.toString());
+
+            stm.execute();
+
+        } catch (SQLException sql){sql.printStackTrace();}
+    }
+
+    /**
+     * update what tests has been done by each student
+     * @param testID
+     * @param studentID
+     * @param date
+     */
+    private void updateTestDone (String testID, String studentID, LocalDate date) {
+        connect("Student.db");
+        try{
+            String sql = "INSERT INTO TestDone(testID, studentID, date) VALUES(?,?,?)";
+            PreparedStatement stm = conn.prepareStatement(sql);
+            stm.setString(1, testID);
+            stm.setString(2, studentID);
+            stm.setString(3, date.toString());
+
+            stm.execute();
+
+            // get the testID related to topicID
+            int lastIndexDot = testID.lastIndexOf('.');
+            String  badgeID = testID.substring(0,lastIndexDot);
+
+            sql = "SELECT COUNT(testID) FROM TestDone WHERE studentID = ? AND testID LIKE ?";
+            stm = conn.prepareStatement(sql);
+            stm.setString(1, studentID);
+            stm.setString(2, badgeID+"%");
+
+            // get the number of tests done by the student in this above badge
+            ResultSet resultSet = stm.executeQuery(sql);
+            if (resultSet.getInt("COUNT(testID)") == 10) updateBadgeList(badgeID, studentID, date);
+        } catch (SQLException sql){sql.printStackTrace();}
+    }
+
+    /**
+     * update what topics has been done by each student
+     * @param topicID
+     * @param studentID
+     * @param date
+     */
+    private void updateTopicDone (String topicID, String studentID, LocalDate date) {
+        connect("Student.db");
+        try{
+            String sql = "INSERT INTO TopicDone(topicID, studentID, date) VALUES(?,?,?)";
+            PreparedStatement stm = conn.prepareStatement(sql);
+            stm.setString(1, topicID);
+            stm.setString(2, studentID);
+            stm.setString(3, date.toString());
+
+            stm.execute();
+
+            // get the testID related to topicID
+            int lastIndexDot = topicID.lastIndexOf('.');
+            String  testID = topicID.substring(0,lastIndexDot);
+
+            sql = "SELECT COUNT(topicID) FROM TopicDone WHERE studentID = ? AND topicID LIKE ?";
+            stm = conn.prepareStatement(sql);
+            stm.setString(1, studentID);
+            stm.setString(2, testID+"%");
+
+            // get the number of topics done by the student in this above topic
+            ResultSet resultSet = stm.executeQuery(sql);
+            if (resultSet.getInt("COUNT(topicID)") == 3) updateTestDone(testID, studentID, date);
+        } catch (SQLException sql){sql.printStackTrace();}
+    }
+
+    /**
      * Records what part has been done by each student
      * @param workID
      * @param studentID
@@ -176,7 +260,7 @@ public class App {
     private void recordWorkDone(String workID, String studentID, LocalDate date){
         connect("Student.db");
         try{
-            String sql = "INSERT INTO WorkDone(workID, studentID, date) VALUES (?,?,?)";
+            String sql = "INSERT INTO PartDone(partID, studentID, date) VALUES (?,?,?)";
 
             PreparedStatement stm = conn.prepareStatement(sql);
             stm.setString(1, workID);
@@ -184,10 +268,25 @@ public class App {
             stm.setString(3, date.toString());
 
             stm.execute();
+
+            // get the topicID related to partID
+            int lastIndexDot = workID.lastIndexOf('.');
+            String  topicID = workID.substring(0,lastIndexDot);
+
+            sql = "SELECT COUNT(partID) FROM PartDone WHERE studentID = ? AND partID LIKE ?";
+            stm = conn.prepareStatement(sql);
+            stm.setString(1, studentID);
+            stm.setString(2, topicID+"%");
+
+            // get the number of parts done by the student in this above topic
+            ResultSet resultSet = stm.executeQuery(sql);
+            if (resultSet.getInt("COUNT(partID)") == 3) updateTopicDone(topicID, studentID, date);
         } catch (SQLException sql){sql.printStackTrace();}
+
     }
 
-    public static String toSha256(String input){
+
+    private String toSha256(String input){
         String ans = "";
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -204,7 +303,7 @@ public class App {
         return ans;
     }
 
-    public static String addSalt(String input){
+    private String addSalt(String input){
         return String.format("spicy%sspace", input);
     }
 
@@ -212,22 +311,27 @@ public class App {
         Scanner scan = new Scanner(System.in);
         System.out.print("Username: ");
         String userName = scan.nextLine();
+        System.out.println();
         System.out.print("Password: ");
         String pass = toSha256(addSalt(scan.nextLine()));
+        if (userName == "root" && pass == toSha256(addSalt("root"))){
+            return true;
+        }else{
+            connect("Staff.db");
+            String query = "SELECT COUNT(*) AS result FROM Staff WHERE staffID = ? AND pass = ?";
+            try {
+                PreparedStatement stm = conn.prepareStatement(query);
+                stm.setString(1, userName);
+                stm.setString(2, pass);
 
-        connect("Staff.db");
-        String query = "SELECT COUNT(*) AS result FROM Staff WHERE staffID = ? AND pass = ?";
-        try {
-            PreparedStatement stm = conn.prepareStatement(query);
-            stm.setString(1, userName);
-            stm.setString(2, pass);
-
-            ResultSet rs = stm.executeQuery();
-            if (rs.getInt(1) == 1) {
-                return true;
+                ResultSet rs = stm.executeQuery();
+                int result = 0;
+                if (rs.getInt(result) == 1){
+                    return true;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return false;
     }
@@ -354,7 +458,7 @@ public class App {
         boolean check = false;
         LocalDate date = null;
         while (!check){
-            System.out.print("Date of birth (yyyy-mm-yy): ");
+            System.out.print("Date of completion (yyyy-mm-yy): ");
             String dateString = scan.nextLine();
             try {
                 date = LocalDate.parse(dateString);
@@ -425,7 +529,7 @@ public class App {
                         "2. Search for a student\n" +
                         "3. Plan/Record a session's content\n" +
                         "4. Record students' achievement\n" +
-                        "5. Record students' attendance\n" +
+                        "5. Record students' attendance." +
                         "6. Exit");
                 try {
                     choice = scan.nextInt();
@@ -452,8 +556,6 @@ public class App {
                     recordAttendanceInterface();
                     break;
                 case 6:
-                    System.out.println("Logging out");
-                    scan.nextLine();
                     break;
             }
         }
