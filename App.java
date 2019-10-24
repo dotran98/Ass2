@@ -4,6 +4,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Scanner;
 
@@ -168,6 +169,116 @@ public class App {
     }
 
     /**
+     * update what tests has been done by each student
+     * @param badgeID
+     * @param studentID
+     */
+    private void updateBadgeList (String badgeID, String studentID) {
+        connect("Student.db");
+        try{
+            String sql = "INSERT INTO BadgeList(badgeID, studentID) VALUES(?,?)";
+            PreparedStatement stm = conn.prepareStatement(sql);
+            stm.setString(1, badgeID);
+            stm.setString(2, studentID);
+
+            stm.execute();
+
+        } catch (SQLException sql){sql.printStackTrace();}
+    }
+
+    /**
+     * update what tests has been done by each student
+     * @param testID
+     * @param studentID
+     */
+    private void updateTestDone (String testID, String studentID) {
+        connect("Student.db");
+        try{
+            String sql = "INSERT INTO TestDone(testID, studentID) VALUES(?,?)";
+            PreparedStatement stm = conn.prepareStatement(sql);
+            stm.setString(1, testID);
+            stm.setString(2, studentID);
+
+            stm.execute();
+
+            // get the testID related to topicID
+            int lastIndexDot = testID.lastIndexOf('.');
+            String  badgeID = testID.substring(0,lastIndexDot);
+
+            sql = "SELECT COUNT(testID) FROM TestDone WHERE studentID = ? AND testID LIKE ?";
+            stm = conn.prepareStatement(sql);
+            stm.setString(1, studentID);
+            stm.setString(2, badgeID+"%");
+
+            // get the number of tests done by the student in this above badge
+            ResultSet resultSet = stm.executeQuery(sql);
+            if (resultSet.getInt("COUNT(testID)") >= 10) {
+
+                // get testID of tests done by the student
+                sql = "SELECT testID FROM TestDone WHERE studentID = ? AND testID LIKE ?";
+                stm = conn.prepareStatement(sql);
+                stm.setString(1, studentID);
+                stm.setString(2, badgeID+"%");
+                resultSet = stm.executeQuery();
+
+                String ID; // ID is the testID
+                int lastIndex, testNum;
+                // check whether the tests 1-7 is done
+                boolean[] checkTest = new boolean[7];
+                while (resultSet.next()){
+                    ID = resultSet.getString("testID");
+                    lastIndex = ID.lastIndexOf('.');
+                    // get the test's number
+                    testNum = Integer.parseInt(ID.substring(lastIndex+1));
+                    checkTest[testNum] = true;
+                }
+                boolean compulsoryTestsComplete = true;
+                for (int i=1;i<=7;i++)
+                    if (!checkTest[i]) {
+                        // one of the compulsory tests is not done
+                        compulsoryTestsComplete = false;
+                        break;
+                }
+                // the number of tests done is greater than 10
+                // all compulsory tests are completed
+                if (compulsoryTestsComplete) updateBadgeList(badgeID,studentID);
+            }
+        } catch (SQLException sql){sql.printStackTrace();}
+    }
+
+    /**
+     * update what topics has been done by each student
+     * @param topicID
+     * @param studentID
+     * @param date
+     */
+    private void updateTopicDone (String topicID, String studentID, LocalDate date) {
+        connect("Student.db");
+        try{
+            String sql = "INSERT INTO TopicDone(topicID, studentID, date) VALUES(?,?,?)";
+            PreparedStatement stm = conn.prepareStatement(sql);
+            stm.setString(1, topicID);
+            stm.setString(2, studentID);
+            stm.setString(3, date.toString());
+
+            stm.execute();
+
+            // get the testID related to topicID
+            int lastIndexDot = topicID.lastIndexOf('.');
+            String  testID = topicID.substring(0,lastIndexDot);
+
+            sql = "SELECT COUNT(topicID) FROM TopicDone WHERE studentID = ? AND topicID LIKE ?";
+            stm = conn.prepareStatement(sql);
+            stm.setString(1, studentID);
+            stm.setString(2, testID+"%");
+
+            // get the number of topics done by the student in this above topic
+            ResultSet resultSet = stm.executeQuery();
+            if (resultSet.getInt("COUNT(topicID)") == 3) updateTestDone(testID, studentID);
+        } catch (SQLException sql){sql.printStackTrace();}
+    }
+
+    /**
      * Records what part has been done by each student
      * @param workID
      * @param studentID
@@ -176,7 +287,7 @@ public class App {
     private void recordWorkDone(String workID, String studentID, LocalDate date){
         connect("Student.db");
         try{
-            String sql = "INSERT INTO WorkDone(workID, studentID, date) VALUES (?,?,?)";
+            String sql = "INSERT INTO PartDone(partID, studentID, date) VALUES (?,?,?)";
 
             PreparedStatement stm = conn.prepareStatement(sql);
             stm.setString(1, workID);
@@ -184,8 +295,23 @@ public class App {
             stm.setString(3, date.toString());
 
             stm.execute();
+
+            // get the topicID related to partID
+            int lastIndexDot = workID.lastIndexOf('.');
+            String  topicID = workID.substring(0,lastIndexDot);
+
+            sql = "SELECT COUNT(partID) FROM PartDone WHERE studentID = ? AND partID LIKE ?";
+            stm = conn.prepareStatement(sql);
+            stm.setString(1, studentID);
+            stm.setString(2, topicID+"%");
+
+            // get the number of parts done by the student in this above topic
+            ResultSet resultSet = stm.executeQuery();
+            if (resultSet.getInt("COUNT(partID)") == 3) updateTopicDone(topicID, studentID, date);
         } catch (SQLException sql){sql.printStackTrace();}
+
     }
+
 
     public static String toSha256(String input){
         String ans = "";
@@ -214,7 +340,6 @@ public class App {
         String userName = scan.nextLine();
         System.out.print("Password: ");
         String pass = toSha256(addSalt(scan.nextLine()));
-
         connect("Staff.db");
         String query = "SELECT COUNT(*) AS result FROM Staff WHERE staffID = ? AND pass = ?";
         try {
@@ -354,7 +479,7 @@ public class App {
         boolean check = false;
         LocalDate date = null;
         while (!check){
-            System.out.print("Date of birth (yyyy-mm-yy): ");
+            System.out.print("Date of completion (yyyy-mm-yy): ");
             String dateString = scan.nextLine();
             try {
                 date = LocalDate.parse(dateString);
