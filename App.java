@@ -191,7 +191,7 @@ public class App {
             stm = conn.createStatement();
             String sql = "SELECT studentID, COUNT(badgeID) " +
                     "FROM BadgeList GROUP BY studentID " +
-                    "ORDER BY COUNT(badgeID) LIMIT 5";
+                    "ORDER BY COUNT(badgeID) DESC LIMIT 5";
 
             ResultSet rs = stm.executeQuery(sql);
 
