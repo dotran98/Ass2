@@ -39,6 +39,7 @@ public class App {
      * @param lastName
      * @param age
      */
+
     private void searchStudent(String firstName, String lastName, int age) {
         String sql;
         String newFirstName = "%" + firstName + "%";
@@ -59,18 +60,19 @@ public class App {
             } else {
                 Calendar today = Calendar.getInstance();
                 int year = today.get(Calendar.YEAR) - age;
-                 sql = "SELECT ID, firstName, lastName, DOB, class, badgeRank FROM Student " +
+                sql = "SELECT ID, firstName, lastName, DOB, class, badgeRank FROM Student " +
                         "WHERE firstName LIKE ? AND lastName LIKE ? AND dob LIKE ?";
                 //Prevents SQL Injection
                 PreparedStatement stm = conn.prepareStatement(sql);
                 stm.setString(1, newFirstName);
                 stm.setString(2, newLastName);
-                stm.setString(3, Integer.toString(year)+"%");
+                stm.setString(3, Integer.toString(year) + "%");
                 rs = stm.executeQuery();
             }
         } catch (SQLException se) {
             se.printStackTrace();
         }
+
         //print out result
         String repeatedLine = new String(new char[30]).replace('\0', '_');
         System.out.println(String.format(" %30s %30s %30s %30s %30s %30s",
@@ -90,15 +92,13 @@ public class App {
             }
         } catch (SQLException se) {
             se.printStackTrace();
-        }
-        finally {
+        } finally {
             try {
                 conn.close();
             } catch (SQLException se) {
                 se.printStackTrace();
             }
         }
-
     }
 
     /**
@@ -191,6 +191,12 @@ public class App {
             stm.execute();
         } catch (SQLException sql) {
             sql.printStackTrace();
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
         }
     }
 
@@ -684,7 +690,7 @@ public class App {
                     System.out.println("Logging out");
                     scan.nextLine();
                     break;
-                case 7:
+                default:
                     System.out.println("Shut down");
                     System.exit(0);
             }
