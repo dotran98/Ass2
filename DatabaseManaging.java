@@ -38,8 +38,8 @@ public class DatabaseManaging {
      * Structures Student database
      */
     public void createTableInStudentDB() {
+        connect("Student.db");
         List<String> queries = new ArrayList<>();
-        connect("Student.db"); //connects to Student database
         try {
             Statement stm = conn.createStatement();
 
@@ -54,24 +54,28 @@ public class DatabaseManaging {
             // Creates a record of badges achieved
             queries.add("CREATE TABLE BadgeList(badgeID VARCHAR(250) NOT NULL," +
                     "studentID VARCHAR(250) NOT NULL," +
-                    "FOREIGN KEY (studentID) REFERENCES Student(ID)," +
+                    "FOREIGN KEY (studentID) REFERENCES Student(ID) " +
+                    "ON DELETE CASCADE ON UPDATE CASCADE," +
                     "CONSTRAINT BadgeList_Key PRIMARY KEY(badgeID, studentID))");
             // Creates a record of tests done
             queries.add("CREATE TABLE TestDone(testID VARCHAR(250) NOT NULL," +
                     "studentID VARCHAR(250) NOT NULL," +
-                    "FOREIGN KEY (studentID) REFERENCES Student(ID)" +
+                    "FOREIGN KEY (studentID) REFERENCES Student(ID) " +
+                    "ON DELETE CASCADE ON UPDATE CASCADE," +
                     "CONSTRAINT TestDone_Key PRIMARY KEY(testID, studentID))");
             // Creates a record of topics done
             queries.add("CREATE TABLE TopicDone(topicID VARCHAR(250) NOT NULL," +
                     "studentID VARCHAR(250) NOT NULL," +
                     "date DATE NOT NULL," +
-                    "FOREIGN KEY (studentID) REFERENCES Student(ID)" +
+                    "FOREIGN KEY (studentID) REFERENCES Student(ID) " +
+                    "ON DELETE CASCADE ON UPDATE CASCADE," +
                     "CONSTRAINT TopicDone_Key PRIMARY KEY(topicID, studentID))");
             // Creates a record of parts done
             queries.add("CREATE TABLE PartDone(partID VARCHAR(250) NOT NULL," +
                     "studentID VARCHAR(250) NOT NULL," +
                     "date DATE NOT NULL," +
-                    "FOREIGN KEY (studentID) REFERENCES Student(ID)," +
+                    "FOREIGN KEY (studentID) REFERENCES Student(ID) " +
+                    "ON DELETE CASCADE ON UPDATE CASCADE," +
                     "CONSTRAINT PartDone_Key PRIMARY KEY(partID, studentID))");
 
             for (String s : queries){
@@ -92,8 +96,8 @@ public class DatabaseManaging {
      * Structures Curriculum database
      */
     public void createTableInCurriculumDB(){
+        connect("Student.db");
         List<String> queries = new ArrayList<>();
-        connect("Curriculum.db");
         try {
             Statement stm = conn.createStatement();
 
@@ -114,7 +118,7 @@ public class DatabaseManaging {
             // Creates a record of what activities done in each session
             queries.add("CREATE TABLE Timetable(partID VARCHAR(250) NOT NULL," +
                     "sID VARCHAR(250) NOT NULL," +
-                    "FOREIGN KEY (sID) REFERENCES Session(sID)," +
+                    "FOREIGN KEY (sID) REFERENCES Session(sID) ON DELETE CASCADE ON UPDATE CASCADE," +
                     "CONSTRAINT Timetable_Key PRIMARY KEY(partID, sID))");
 
             for (String s : queries){
@@ -136,8 +140,9 @@ public class DatabaseManaging {
      * @param classNo number of classes
      */
     public void createTableInAttendanceDB(int classNo){
+        connect("Student.db");
         List<String> queries = new ArrayList<>();
-        connect("Attendance.db");
+        connect("Student.db");
         try {
             Statement stm = conn.createStatement();
             String sql;
@@ -163,7 +168,7 @@ public class DatabaseManaging {
     }
 
     public void createTableINStaffDB(){
-        connect("Staff.db");
+        connect("Student.db");
         String sql = "CREATE TABLE Staff(staffID VARCHAR(250) PRIMARY KEY," +
                 "pass VARCHAR(250) NOT NULL)";
         try {
@@ -191,5 +196,8 @@ public class DatabaseManaging {
         db.createTableInStudentDB();
         db.createTableInCurriculumDB();
         db.createTableINStaffDB();
+        try {
+            conn.close();
+        } catch(SQLException es){};
     }
 }
